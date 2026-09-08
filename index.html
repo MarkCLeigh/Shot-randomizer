@@ -9,6 +9,7 @@
       --bg: #091322;
       --card-bg: rgba(255, 255, 255, 0.07);
       --accent: #007aff;
+      --accent-active: #34c759;
       --text: #ffffff;
       --subtext: #8e8e93;
     }
@@ -34,7 +35,7 @@
     }
     header {
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
     }
     h1 {
       font-size: 1.2rem;
@@ -70,7 +71,6 @@
       font-size: 1.1rem;
       font-weight: bold;
     }
-    /* Goal Graphic */
     .goal-container {
       position: relative;
       width: 100%;
@@ -101,6 +101,11 @@
     li {
       margin-bottom: 6px;
     }
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
     button {
       background-color: var(--accent);
       color: white;
@@ -112,6 +117,17 @@
       cursor: pointer;
       width: 100%;
       box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    }
+    button.auto-btn {
+      background-color: transparent;
+      border: 2px solid var(--accent-active);
+      color: var(--accent-active);
+      box-shadow: none;
+    }
+    button.auto-btn.active {
+      background-color: var(--accent-active);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
     }
     button:active {
       transform: scale(0.98);
@@ -150,7 +166,6 @@
         </div>
       </div>
 
-      <!-- Interactive Goal Visualizer -->
       <div class="goal-container" id="goal">
         <div class="target-dot" id="target-dot" style="top: 50%; left: 50%; display: none;"></div>
       </div>
@@ -159,11 +174,14 @@
     <div class="card">
       <div class="metric-label" style="margin-bottom: 8px;">KEY COACHING POINTS</div>
       <ul id="points-list">
-        <li>Tap "NEW SHOT" to receive your execution instructions.</li>
+        <li>Tap "NEW SHOT" to start your training session.</li>
       </ul>
     </div>
 
-    <button onclick="generateShot()">NEW SHOT</button>
+    <div class="btn-group">
+      <button onclick="handleManualShot()">NEW SHOT</button>
+      <button id="auto-btn" class="auto-btn" onclick="toggleAutoMode()">START 1-MIN TIMER</button>
+    </div>
   </div>
 
   <script>
@@ -179,22 +197,41 @@
 
     const shotTypes = [
       {
-        name: "Instep Drive (Laces)",
+        name: "Instep Drive",
+        subtitle: "Laces Shot",
         points: ["Keep your ankle locked", "Strike using the top of the laces", "Follow through towards target", "Body over the ball"]
       },
       {
-        name: "Placed Shot (Inside Foot)",
+        name: "Placed Shot",
+        subtitle: "Inside Foot",
         points: ["Open up your hips", "Strike with the inside arch", "Wrap foot around for side spin", "Focus on accuracy over power"]
       },
       {
-        name: "Chip Shot (Lofted)",
+        name: "Chip Shot",
+        subtitle: "Lofted",
         points: ["Jab beneath the ball", "Lean slightly backward", "Shorten your follow-through"]
       },
       {
-        name: "Trivela (Outside Foot)",
+        name: "Trivela",
+        subtitle: "Outside Foot",
         points: ["Approach target at an angle", "Strike with pinky-toe edge", "Slice across the ball for outward curve"]
       }
     ];
+
+    let timerId = null;
+    let isAutoMode = false;
+
+    function speakInstructions(foot, type, target) {
+      window.speechSynthesis.cancel();
+      const phrase = `${foot}. ${type}. Aim for ${target}.`;
+      
+      const utterance = new SpeechSynthesisUtterance(phrase);
+      utterance.rate = 0.9;
+      utterance.pitch = 1.0;
+      utterance.lang = 'en-US';
+
+      window.speechSynthesis.speak(utterance);
+    }
 
     function generateShot() {
       const selectedFoot = feet[Math.floor(Math.random() * feet.length)];
@@ -203,15 +240,13 @@
 
       document.getElementById("foot-val").innerText = selectedFoot;
       document.getElementById("target-val").innerText = selectedTarget.name;
-      document.getElementById("type-val").innerText = selectedType.name;
+      document.getElementById("type-val").innerText = `${selectedType.name} (${selectedType.subtitle})`;
 
-      // Update Target Visualizer Dot
       const dot = document.getElementById("target-dot");
       dot.style.display = "block";
       dot.style.top = selectedTarget.top;
       dot.style.left = selectedTarget.left;
 
-      // Update Key Points
       const list = document.getElementById("points-list");
       list.innerHTML = "";
       selectedType.points.forEach(point => {
@@ -219,6 +254,37 @@
         li.innerText = point;
         list.appendChild(li);
       });
+
+      speakInstructions(selectedFoot, selectedType.name, selectedTarget.name);
+    }
+
+    function resetInterval() {
+      if (isAutoMode) {
+        clearInterval(timerId);
+        timerId = setInterval(generateShot, 60000); // 60,000 ms = 1 minute
+      }
+    }
+
+    function handleManualShot() {
+      generateShot();
+      resetInterval(); // Resets the 1-minute countdown if tapped early
+    }
+
+    function toggleAutoMode() {
+      const btn = document.getElementById("auto-btn");
+      isAutoMode = !isAutoMode;
+
+      if (isAutoMode) {
+        btn.innerText = "STOP AUTO TIMER";
+        btn.classList.add("active");
+        generateShot();
+        timerId = setInterval(generateShot, 60000);
+      } else {
+        btn.innerText = "START 1-MIN TIMER";
+        btn.classList.remove("active");
+        clearInterval(timerId);
+        window.speechSynthesis.cancel();
+      }
     }
   </script>
 </body>
