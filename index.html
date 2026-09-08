@@ -31,11 +31,11 @@
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
     }
     header {
       text-align: center;
-      margin-bottom: 5px;
+      margin-bottom: 0px;
     }
     h1 {
       font-size: 1.2rem;
@@ -44,10 +44,44 @@
       text-transform: uppercase;
       color: var(--subtext);
     }
+    /* Scoreboard */
+    .scoreboard {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .score-item {
+      text-align: center;
+    }
+    .score-num {
+      font-size: 1.3rem;
+      font-weight: bold;
+    }
+    .score-label {
+      font-size: 0.65rem;
+      color: var(--subtext);
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+    .reset-link {
+      background: none;
+      border: none;
+      color: var(--subtext);
+      font-size: 0.75rem;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 0;
+      width: auto;
+      box-shadow: none;
+    }
     .card {
       background: var(--card-bg);
       border-radius: 16px;
-      padding: 20px;
+      padding: 18px;
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
@@ -55,11 +89,11 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     .metric-icon {
-      font-size: 24px;
-      width: 32px;
+      font-size: 22px;
+      width: 30px;
       text-align: center;
     }
     .metric-label {
@@ -68,9 +102,10 @@
       font-weight: bold;
     }
     .metric-value {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: bold;
     }
+    /* Goal Graphic */
     .goal-container {
       position: relative;
       width: 100%;
@@ -81,25 +116,21 @@
       margin-top: 10px;
       border-radius: 4px 4px 0 0;
     }
-    .target-dot {
+    .target-ball {
       position: absolute;
-      width: 20px;
-      height: 20px;
-      background: #ff3b30;
-      border: 2px solid #fff;
-      border-radius: 50%;
+      font-size: 22px;
       transform: translate(-50%, -50%);
-      box-shadow: 0 0 10px #ff3b30;
+      filter: drop-shadow(0px 0px 6px rgba(255, 255, 255, 0.8));
       transition: all 0.3s ease;
     }
     ul {
-      margin: 8px 0 0 0;
+      margin: 6px 0 0 0;
       padding-left: 20px;
       color: #d1d1d6;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
     li {
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
     .btn-group {
       display: flex;
@@ -141,6 +172,23 @@
       <h1>Shot Randomizer</h1>
     </header>
 
+    <!-- Scoreboard Tracker -->
+    <div class="scoreboard">
+      <div class="score-item">
+        <div class="score-num" id="goals-cnt" style="color: #34c759;">0</div>
+        <div class="score-label">Goals</div>
+      </div>
+      <div class="score-item">
+        <div class="score-num" id="misses-cnt" style="color: #ff3b30;">0</div>
+        <div class="score-label">Misses</div>
+      </div>
+      <div class="score-item">
+        <div class="score-num" id="accuracy-cnt">0%</div>
+        <div class="score-label">Accuracy</div>
+      </div>
+      <button class="reset-link" onclick="resetStats()">Reset</button>
+    </div>
+
     <div class="card">
       <div class="metric">
         <div class="metric-icon">🦶</div>
@@ -167,19 +215,19 @@
       </div>
 
       <div class="goal-container" id="goal">
-        <div class="target-dot" id="target-dot" style="top: 50%; left: 50%; display: none;"></div>
+        <div class="target-ball" id="target-ball" style="top: 50%; left: 50%; display: none;">⚽</div>
       </div>
     </div>
 
     <div class="card">
-      <div class="metric-label" style="margin-bottom: 8px;">KEY COACHING POINTS</div>
+      <div class="metric-label" style="margin-bottom: 4px;">KEY COACHING POINTS</div>
       <ul id="points-list">
-        <li>Tap "NEW SHOT" to start your training session.</li>
+        <li>Tap "GOAL (NEXT SHOT)" to begin your session.</li>
       </ul>
     </div>
 
     <div class="btn-group">
-      <button onclick="handleManualShot()">NEW SHOT</button>
+      <button onclick="handleGoalMade()">GOAL (NEXT SHOT)</button>
       <button id="auto-btn" class="auto-btn" onclick="toggleAutoMode()">START 1-MIN TIMER</button>
     </div>
   </div>
@@ -220,6 +268,9 @@
 
     let timerId = null;
     let isAutoMode = false;
+    let hasActiveShot = false;
+    let goals = 0;
+    let misses = 0;
 
     function speakInstructions(foot, type, target) {
       window.speechSynthesis.cancel();
@@ -233,6 +284,21 @@
       window.speechSynthesis.speak(utterance);
     }
 
+    function updateScoreboard() {
+      document.getElementById("goals-cnt").innerText = goals;
+      document.getElementById("misses-cnt").innerText = misses;
+      
+      const total = goals + misses;
+      const pct = total === 0 ? 0 : Math.round((goals / total) * 100);
+      document.getElementById("accuracy-cnt").innerText = `${pct}%`;
+    }
+
+    function resetStats() {
+      goals = 0;
+      misses = 0;
+      updateScoreboard();
+    }
+
     function generateShot() {
       const selectedFoot = feet[Math.floor(Math.random() * feet.length)];
       const selectedTarget = targets[Math.floor(Math.random() * targets.length)];
@@ -242,10 +308,10 @@
       document.getElementById("target-val").innerText = selectedTarget.name;
       document.getElementById("type-val").innerText = `${selectedType.name} (${selectedType.subtitle})`;
 
-      const dot = document.getElementById("target-dot");
-      dot.style.display = "block";
-      dot.style.top = selectedTarget.top;
-      dot.style.left = selectedTarget.left;
+      const ball = document.getElementById("target-ball");
+      ball.style.display = "block";
+      ball.style.top = selectedTarget.top;
+      ball.style.left = selectedTarget.left;
 
       const list = document.getElementById("points-list");
       list.innerHTML = "";
@@ -256,18 +322,33 @@
       });
 
       speakInstructions(selectedFoot, selectedType.name, selectedTarget.name);
+      hasActiveShot = true;
+    }
+
+    // Called when the 60-second timer elapses automatically
+    function handleTimerTimeout() {
+      if (hasActiveShot) {
+        misses++;
+        updateScoreboard();
+      }
+      generateShot();
     }
 
     function resetInterval() {
       if (isAutoMode) {
         clearInterval(timerId);
-        timerId = setInterval(generateShot, 60000); // 60,000 ms = 1 minute
+        timerId = setInterval(handleTimerTimeout, 60000);
       }
     }
 
-    function handleManualShot() {
+    // Called when user taps the Goal button
+    function handleGoalMade() {
+      if (hasActiveShot) {
+        goals++;
+        updateScoreboard();
+      }
       generateShot();
-      resetInterval(); // Resets the 1-minute countdown if tapped early
+      resetInterval();
     }
 
     function toggleAutoMode() {
@@ -278,7 +359,7 @@
         btn.innerText = "STOP AUTO TIMER";
         btn.classList.add("active");
         generateShot();
-        timerId = setInterval(generateShot, 60000);
+        timerId = setInterval(handleTimerTimeout, 60000);
       } else {
         btn.innerText = "START 1-MIN TIMER";
         btn.classList.remove("active");
