@@ -13,7 +13,6 @@
       --text: #ffffff;
       --subtext: #8e8e93;
       --gold: #fdd835;
-      --blue: #0033cc;
     }
     body {
       margin: 0;
@@ -44,9 +43,10 @@
       margin-bottom: 4px;
     }
     .club-crest {
-      width: 60px;
-      height: 68px;
-      filter: drop-shadow(0px 2px 6px rgba(253, 216, 53, 0.3));
+      width: 75px;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0px 2px 6px rgba(255, 255, 255, 0.15));
     }
     h1 {
       font-size: 1.1rem;
@@ -194,15 +194,7 @@
 
   <div class="container">
     <header>
-      <!-- Weston Point JFC Crest Logo -->
-      <svg class="club-crest" viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
-        <path d="M 10 10 L 190 10 C 190 120, 170 190, 100 225 C 30 190, 10 120, 10 10 Z" fill="#0033cc" stroke="#fdd835" stroke-width="12" />
-        <path d="M 22 24 L 178 24 C 178 115, 160 180, 100 210 C 40 180, 22 115, 22 24 Z" fill="#fdd835" />
-        <path d="M 38 48 L 162 48 C 162 110, 148 158, 100 182 C 52 158, 38 110, 38 48 Z" fill="#0033cc" />
-        <text x="100" y="21" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">Weston Point JFC</text>
-        <text x="100" y="78" font-family="Arial, sans-serif" font-size="34" font-weight="900" fill="#fdd835" text-anchor="middle">WP</text>
-        <text x="100" y="152" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#0033cc" text-anchor="middle">Est 1971</text>
-      </svg>
+      <img src="IMG_2172.png" alt="Weston Point Crest" class="club-crest" />
       <h1>Weston Point Warriors</h1>
       <div class="subtitle">Shot Randomiser</div>
     </header>
